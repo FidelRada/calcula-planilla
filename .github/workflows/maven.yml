@@ -1,0 +1,200 @@
+# =====================================================================
+#  calcula — pipeline de CI/CD
+#
+#  Ruta y nombre exigidos por el punto 8 del enunciado. Los comandos usan
+#  `mvn ... --file pom.xml`: el punto 8 prohíbe expresamente depender de
+#  ./mvnw en Actions (el wrapper sigue siendo válido en local).
+#
+#  Cuatro jobs encadenados por `needs`. Los tres primeros son los
+#  checks requeridos por la protección de rama; sus nombres —Build,
+#  Test, Package— deben coincidir EXACTAMENTE con los `contexts`
+#  configurados en la protección, o el PR queda esperando un check
+#  que no existe.
+# =====================================================================
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+    tags:     [ 'v*' ]
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+
+  # -------------------------------------------------------------------
+  # 1. Build — bloqueante. Rápido y determinista: si no compila, no
+  #    tiene sentido gastar tiempo en nada más.
+  # -------------------------------------------------------------------
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Compilar
+        run: mvn -B clean compile --file pom.xml
+
+  # -------------------------------------------------------------------
+  # 2. Test — bloqueante, e incluye el Quality Gate de cobertura.
+  # -------------------------------------------------------------------
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Pruebas unitarias
+        run: mvn -B test --file pom.xml
+
+      # if: always() — el reporte se genera aunque las pruebas fallen.
+      # Si solo se guardara al pasar, no habría evidencia justo cuando
+      # hace falta diagnosticar.
+      - name: Reporte de cobertura
+        if: always()
+        run: mvn -B jacoco:report --file pom.xml
+
+      # Quality Gate. El umbral vive en la propiedad
+      # jacoco.cobertura.minima del pom.xml (0.80), parametrizado
+      # para poder moverlo sin tocar el workflow.
+      - name: Quality Gate — cobertura mínima
+        run: mvn -B jacoco:check --file pom.xml
+
+      - name: Publicar reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-${{ github.run_number }}
+          path: |
+            target/surefire-reports/
+            target/site/jacoco/
+          if-no-files-found: warn
+          retention-days: 7
+
+      # Se leen los XML, no los .txt: con clases @Nested los .txt de la
+      # clase externa reportan 0 pruebas y el resumen enganaria.
+      - name: Resumen
+        if: always()
+        run: |
+          {
+            echo "### Pruebas"
+            if [ -d target/surefire-reports ]; then
+              python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          t = f = e = s = 0
+          for x in glob.glob("target/surefire-reports/TEST-*.xml"):
+              r = ET.parse(x).getroot()
+              t += int(r.get("tests", 0));    f += int(r.get("failures", 0))
+              e += int(r.get("errors", 0));   s += int(r.get("skipped", 0))
+          print(f"- **{t}** pruebas · {f} fallos · {e} errores · {s} omitidas")
+          PY
+            else
+              echo "- No se generaron reportes."
+            fi
+            echo "### Cobertura"
+            if [ -f target/site/jacoco/jacoco.csv ]; then
+              python3 - <<'PY'
+          import csv
+          filas = list(csv.DictReader(open("target/site/jacoco/jacoco.csv")))
+          for k in ("LINE", "BRANCH"):
+              m = sum(int(r[k + "_MISSED"]) for r in filas)
+              c = sum(int(r[k + "_COVERED"]) for r in filas)
+              if m + c:
+                  print(f"- {k.lower()}: {c}/{m + c} = {100 * c / (m + c):.1f} %")
+          PY
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # -------------------------------------------------------------------
+  # 3. Package — bloqueante. Produce el artefacto UNA sola vez.
+  #    -DskipTests porque el job `test` ya las ejecutó: repetirlas
+  #    aquí solo alargaría el pipeline sin añadir información.
+  # -------------------------------------------------------------------
+  package:
+    name: Package
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Empaquetar
+        run: mvn -B package -DskipTests --file pom.xml
+
+      - name: Preparar el paquete del frontend
+        run: tar -czf target/calcula-web.tgz -C web .
+
+      # Este es el único punto donde se construye. Release lo baja
+      # de aquí; el deployment lo baja de la Release. Nunca se
+      # reconstruye: es lo que hace verificable el punto 11.
+      - name: Guardar los artefactos
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            target/*.jar
+            target/calcula-web.tgz
+          if-no-files-found: error
+
+  # -------------------------------------------------------------------
+  # 4. Release — solo en tags. NO es un check requerido: en un PR
+  #    este job ni siquiera aparece.
+  #
+  #    download-artifact recupera el paquete DEL MISMO RUN, así que
+  #    el jar publicado es literalmente el que produjo `package`.
+  #    Comprobable con sha256sum contra el jar desplegado.
+  # -------------------------------------------------------------------
+  release:
+    name: Release
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Recuperar los artefactos del mismo run
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publicar los checksums
+        run: |
+          cd dist
+          sha256sum * | tee SHA256SUMS
+          {
+            echo "### Artefactos de ${{ github.ref_name }}"
+            echo '```'
+            cat SHA256SUMS
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Crear la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.jar
+            dist/calcula-web.tgz
+            dist/SHA256SUMS
+          generate_release_notes: true

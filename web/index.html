@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calcula — planilla</title>
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">Calcula</span><span class="sub">planilla</span></div>
+    <div class="served" id="served">
+      <span class="dot"></span>
+      <span class="who" id="served-who">…</span>
+      <span class="ver" id="served-ver"></span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Liquidación</h2>
+      <div class="body">
+        <div class="fields">
+          <div>
+            <label for="salario">Salario bruto <span class="hint">Bs</span></label>
+            <input type="number" id="salario" value="8500" min="0" step="100">
+          </div>
+          <div>
+            <label for="anios">Antigüedad <span class="hint">años</span></label>
+            <input type="number" id="anios" value="5" min="0" step="1">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="primary" id="btn-calc">Calcular</button>
+        </div>
+        <div id="salida"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Instancia que responde</h2>
+      <div class="body">
+        <div class="btn-row">
+          <button id="btn-traffic">Probar 20 peticiones</button>
+        </div>
+        <div class="dots" id="dots"></div>
+        <div class="tally">
+          <span class="t b">BLUE <b id="t-b">0</b></span>
+          <span class="t g">GREEN <b id="t-g">0</b></span>
+          <span class="t e">error <b id="t-e">0</b></span>
+        </div>
+        <p class="note">
+          Cada punto es una petición real a <code>/api/instance</code> y su color es
+          la instancia que la atendió. Es lo que hace observable el Blue-Green.
+        </p>
+      </div>
+    </section>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
