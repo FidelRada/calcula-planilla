@@ -22,7 +22,7 @@ public class PlanillaService {
 
     /** Escalones de antiguedad: {aniosMinimos, porcentaje del salario minimo}. */
     private static final double[][] ESCALONES = {
-        {15, 0.34}, {11, 0.26}, {8, 0.18}, {5, 0.11}, {2, 0.05}, {0, 0.00}
+        {15, 0.34}, {11, 0.26}, {8, 0.18}, {6, 0.11}, {2, 0.05}, {0, 0.00}
     };
 
     private final double salarioMinimo;
