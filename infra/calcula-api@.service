@@ -1,0 +1,18 @@
+# Una sola unidad de plantilla para las dos instancias. %i vale
+# "blue" o "green": el fichero de entorno da identidad y puerto.
+# Es lo que permite que el mismo .jar sirva para ambas.
+[Unit]
+Description=Calcula API - instancia %i
+After=network.target
+
+[Service]
+Type=simple
+User=osboxes
+EnvironmentFile=/etc/calcula/%i.env
+ExecStart=/usr/bin/java -jar /opt/calcula/current-%i/calcula-api.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
