@@ -3,6 +3,15 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/);
 versionado según [SemVer](https://semver.org/lang/es/).
 
+## [1.1.0] — 2026-09-03
+
+### Añadido
+- Infraestructura de despliegue versionada en `infra/`: unidad systemd de plantilla
+  `calcula-api@.service`, configuración de Nginx con `upstream` conmutable y `bootstrap.sh`.
+- Scripts de despliegue en `scripts/`: `deploy.sh`, `rollback.sh`, `health-check.sh`,
+  `smoke-test.sh`, `switch-traffic.sh` y `traffic-test.sh`.
+- `README.md` con los catorce apartados de documentación exigidos.
+
 ## [1.0.0] — 2026-09-03
 
 ### Añadido
