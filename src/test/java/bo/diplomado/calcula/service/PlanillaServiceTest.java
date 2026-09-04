@@ -175,4 +175,21 @@ class PlanillaServiceTest {
             assertDoesNotThrow(() -> servicio.liquidar(2750, 0));
         }
     }
+
+    @Nested
+    @DisplayName("Parametros vigentes")
+    class Parametros {
+
+        @Test
+        @DisplayName("expone los cinco parametros configurados")
+        void exponeLosCinco() {
+            var p = servicio.parametros();
+            assertEquals(5, p.size());
+            assertEquals(2750.0,  p.get("salarioMinimo"));
+            assertEquals(0.1271,  p.get("tasaAfp"));
+            assertEquals(60.0,    p.get("topeAfpMinimos"));
+            assertEquals(0.13,    p.get("tasaRcIva"));
+            assertEquals(2.0,     p.get("minimosExentos"));
+        }
+    }
 }

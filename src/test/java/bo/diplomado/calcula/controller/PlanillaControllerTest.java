@@ -60,4 +60,13 @@ class PlanillaControllerTest {
                         .param("anios", "-1"))
                .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("expone los parametros vigentes de la instancia")
+    void exponeLosParametros() throws Exception {
+        mockMvc.perform(get("/api/planilla/parametros"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.salarioMinimo").value(2750.0))
+           .andExpect(jsonPath("$.tasaAfp").value(0.1271));
+    }
 }

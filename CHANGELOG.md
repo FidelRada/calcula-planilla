@@ -3,6 +3,14 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/);
 versionado según [SemVer](https://semver.org/lang/es/).
 
+## [1.2.0] — 2026-09-04
+
+### Añadido
+- `GET /api/planilla/parametros`: expone la configuración vigente de la instancia
+  (salario mínimo, tasas y topes). Permite comprobar que BLUE y GREEN están
+  configurados igual — si dos instancias liquidan distinto, es lo primero que hay
+  que descartar.
+
 ## [1.1.0] — 2026-09-03
 
 ### Añadido
