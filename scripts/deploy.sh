@@ -8,7 +8,10 @@ set -euo pipefail
 
 VERSION="${1:?uso: deploy.sh <version>    ej: deploy.sh 1.1.0}"
 REPO="${REPO:-FidelRada/calcula-planilla}"
-APPSERVER="${APPSERVER:-osboxes@192.168.100.171}"
+# La IP de appserver cambia cada vez que el anfitrion se conecta a otra
+# WiFi (las VM tienen IP estatica sobre un adaptador puente). Se puede
+# sobrescribir sin tocar el codigo:  APPSERVER=osboxes@10.0.0.5 ./deploy.sh 1.1.0
+APPSERVER="${APPSERVER:-osboxes@192.168.2.171}"
 LLAVE="${LLAVE:-$HOME/.ssh/id_lab5}"
 SSH=(ssh -i "$LLAVE" -o BatchMode=yes -o StrictHostKeyChecking=no "$APPSERVER")
 R=/opt/calcula
