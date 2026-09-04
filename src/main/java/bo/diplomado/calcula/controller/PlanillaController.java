@@ -23,6 +23,12 @@ public class PlanillaController {
         return servicio.liquidar(salario, anios);
     }
 
+    /** Expone la configuracion vigente, para comparar instancias entre si. */
+    @GetMapping("/parametros")
+    public Map<String, Double> parametros() {
+        return servicio.parametros();
+    }
+
     /**
      * Una entrada invalida es un error del cliente, no del servidor: sin
      * esto Spring devolveria 500 y el health check del deployment

@@ -4,6 +4,8 @@ import bo.diplomado.calcula.model.Liquidacion;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 /**
  * Liquidacion de planilla.
  *
@@ -66,6 +68,22 @@ public class PlanillaService {
     public double rcIva(double neto) {
         double exento = salarioMinimo * minimosExentos;
         return Math.max(0.0, neto - exento) * tasaRcIva;
+    }
+
+    /**
+     * Los parametros vigentes en esta instancia.
+     *
+     * Sirve para comprobar que BLUE y GREEN estan configurados igual: si
+     * dos instancias liquidan distinto, lo primero que hay que descartar
+     * es que una tenga otros parametros.
+     */
+    public Map<String, Double> parametros() {
+        return Map.of(
+                "salarioMinimo",  salarioMinimo,
+                "tasaAfp",        tasaAfp,
+                "topeAfpMinimos", topeAfpMinimos,
+                "tasaRcIva",      tasaRcIva,
+                "minimosExentos", minimosExentos);
     }
 
     private double topeAfp() {
