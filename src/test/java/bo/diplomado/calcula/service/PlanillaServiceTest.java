@@ -11,8 +11,9 @@ import org.junit.jupiter.params.provider.CsvSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Cubre las doce ramas de PlanillaService: los seis escalones, el tope
- * de AFP, la exencion de RC-IVA y las dos validaciones.
+ * Cubre las veinte ramas de PlanillaService: los seis escalones, el
+ * tope de AFP, la exencion de RC-IVA, las dos validaciones de liquidar
+ * y las cuatro decisiones del aguinaldo.
  *
  * Los valores esperados son los mismos que usa scripts/smoke-test.sh,
  * asi que la prueba unitaria y la de humo comprueban lo mismo desde los
@@ -25,7 +26,7 @@ class PlanillaServiceTest {
     @BeforeEach
     void inicializar() {
         // Mismos valores que application.properties.
-        servicio = new PlanillaService(2750, 0.1271, 60, 0.13, 2);
+        servicio = new PlanillaService(2750, 0.1271, 60, 0.13, 2, 3);
     }
 
     @Nested
@@ -184,12 +185,76 @@ class PlanillaServiceTest {
         @DisplayName("expone los cinco parametros configurados")
         void exponeLosCinco() {
             var p = servicio.parametros();
-            assertEquals(5, p.size());
+            assertEquals(6, p.size());
             assertEquals(2750.0,  p.get("salarioMinimo"));
             assertEquals(0.1271,  p.get("tasaAfp"));
             assertEquals(60.0,    p.get("topeAfpMinimos"));
             assertEquals(0.13,    p.get("tasaRcIva"));
             assertEquals(2.0,     p.get("minimosExentos"));
+            assertEquals(3.0,     p.get("mesesMinimosAguinaldo"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Aguinaldo proporcional")
+    class AguinaldoProporcional {
+
+        @Test
+        @DisplayName("sin derecho por debajo del minimo de meses")
+        void sinDerecho() {
+            var a = servicio.aguinaldo(8500, 5, 2);
+            assertFalse(a.tieneDerecho());
+            assertEquals(0.0, a.montoAguinaldo());
+            assertEquals(8802.50, a.totalGanado());
+        }
+
+        @Test
+        @DisplayName("en el borde inferior ya se devenga")
+        void bordeInferior() {
+            var a = servicio.aguinaldo(8500, 5, 3);
+            assertTrue(a.tieneDerecho());
+            assertEquals(2200.63, a.montoAguinaldo());
+        }
+
+        @Test
+        @DisplayName("al ano cumplido se devenga un total ganado completo")
+        void anoCompleto() {
+            var a = servicio.aguinaldo(8500, 5, 12);
+            assertTrue(a.tieneDerecho());
+            assertEquals(a.totalGanado(), a.montoAguinaldo());
+        }
+
+        @ParameterizedTest(name = "{0} meses -> {1}")
+        @CsvSource({
+            "3,  2200.63",
+            "6,  4401.25",
+            "9,  6601.88",
+            "11, 8068.96"
+        })
+        @DisplayName("la parte proporcional")
+        void proporcional(int meses, double esperado) {
+            assertEquals(esperado, servicio.aguinaldo(8500, 5, meses).montoAguinaldo());
+        }
+
+        @Test
+        @DisplayName("meses negativos son entrada invalida")
+        void mesesNegativos() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> servicio.aguinaldo(8500, 5, -1));
+        }
+
+        @Test
+        @DisplayName("mas de doce meses son entrada invalida")
+        void mesesExcesivos() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> servicio.aguinaldo(8500, 5, 13));
+        }
+
+        @Test
+        @DisplayName("hereda las validaciones de liquidar")
+        void heredaValidaciones() {
+            assertThrows(IllegalArgumentException.class,
+                    () -> servicio.aguinaldo(100, 5, 6));
         }
     }
 }

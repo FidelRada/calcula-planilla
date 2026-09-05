@@ -3,6 +3,19 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/);
 versionado según [SemVer](https://semver.org/lang/es/).
 
+## [1.3.0] — 2026-09-04
+
+### Añadido
+- `GET /api/planilla/aguinaldo`: calcula el aguinaldo devengado según los meses
+  trabajados en el año. Sin derecho por debajo del mínimo de meses, proporcional
+  entre ese mínimo y el año, y un total ganado completo al año cumplido.
+- Parámetro configurable `planilla.meses-minimos-aguinaldo` (3), expuesto también
+  por `GET /api/planilla/parametros`.
+
+### Cambiado
+- `PlanillaService` pasa de doce a **veinte ramas**; la cobertura de ramas sigue
+  al 100 % con 48 pruebas.
+
 ## [1.2.0] — 2026-09-04
 
 ### Añadido

@@ -1,5 +1,6 @@
 package bo.diplomado.calcula.controller;
 
+import bo.diplomado.calcula.model.Aguinaldo;
 import bo.diplomado.calcula.model.Liquidacion;
 import bo.diplomado.calcula.service.PlanillaService;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,13 @@ public class PlanillaController {
     @GetMapping("/parametros")
     public Map<String, Double> parametros() {
         return servicio.parametros();
+    }
+
+    @GetMapping("/aguinaldo")
+    public Aguinaldo aguinaldo(@RequestParam double salario,
+                               @RequestParam int anios,
+                               @RequestParam int meses) {
+        return servicio.aguinaldo(salario, anios, meses);
     }
 
     /**

@@ -24,6 +24,8 @@ probar() {   # descripcion, url, campo json, valor esperado
 probar "liquidar 8500 / 5 anios" "$BASE/api/planilla/liquidar?salario=8500&anios=5" liquidoPagable 7399.82
 probar "liquidar 8500 / 4 anios" "$BASE/api/planilla/liquidar?salario=8500&anios=4" liquidoPagable 7274.52
 probar "exencion de RC-IVA"      "$BASE/api/planilla/liquidar?salario=2750&anios=0" liquidoPagable 2400.48
+probar "aguinaldo 6 meses"       "$BASE/api/planilla/aguinaldo?salario=8500&anios=5&meses=6" montoAguinaldo 4401.25
+probar "aguinaldo sin derecho"   "$BASE/api/planilla/aguinaldo?salario=8500&anios=5&meses=2" montoAguinaldo 0.0
 
 # Una entrada invalida debe dar 400, no 500.
 CODIGO=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 \

@@ -21,7 +21,7 @@ class PlanillaControllerTest {
     static class Config {
         @Bean
         PlanillaService planillaService() {
-            return new PlanillaService(2750, 0.1271, 60, 0.13, 2);
+            return new PlanillaService(2750, 0.1271, 60, 0.13, 2, 3);
         }
     }
 
@@ -68,5 +68,27 @@ class PlanillaControllerTest {
            .andExpect(status().isOk())
            .andExpect(jsonPath("$.salarioMinimo").value(2750.0))
            .andExpect(jsonPath("$.tasaAfp").value(0.1271));
+    }
+
+    @Test
+    @DisplayName("calcula el aguinaldo proporcional")
+    void calculaElAguinaldo() throws Exception {
+        mockMvc.perform(get("/api/planilla/aguinaldo")
+                        .param("salario", "8500")
+                        .param("anios", "5")
+                        .param("meses", "6"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.tieneDerecho").value(true))
+           .andExpect(jsonPath("$.montoAguinaldo").value(4401.25));
+    }
+
+    @Test
+    @DisplayName("meses fuera de rango devuelven 400")
+    void mesesFueraDeRango() throws Exception {
+        mockMvc.perform(get("/api/planilla/aguinaldo")
+                        .param("salario", "8500")
+                        .param("anios", "5")
+                        .param("meses", "13"))
+           .andExpect(status().isBadRequest());
     }
 }
