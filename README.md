@@ -218,3 +218,7 @@ Los porcentajes y tramos de `application.properties` son **valores de ejemplo pa
 una fuente legal**. Lo que las pruebas fijan es la lógica —dónde cortan los escalones, que el tope
 se aplique, que la exención funcione— no la exactitud normativa. Para uso real hay que verificarlos
 contra la norma vigente.
+
+### Nota sobre trazabilidad
+
+El proceso CI/CD mantiene trazabilidad entre el código fuente, el tag, la Release y el artefacto desplegado mediante SHA256.
