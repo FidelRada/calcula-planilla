@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
@@ -38,6 +40,7 @@ public class InstanciaController {
         return Map.of(
                 "instance", instancia,
                 "port",     puerto,
+                "date", LocalDateTime.now().toString(),
                 "version",  version);
     }
 }
