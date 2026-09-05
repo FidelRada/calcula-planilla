@@ -109,12 +109,12 @@ un jar; ese jar se adjunta a una Release con el nombre del tag.
 Los comandos usan `mvn --file pom.xml`: el enunciado prohíbe depender de `./mvnw` en Actions. El
 wrapper se conserva para el trabajo local.
 
-**Cobertura actual: 100 % de líneas y 100 % de ramas**, con 34 pruebas. El umbral del Quality Gate
+**Cobertura actual: 100 % de líneas y 100 % de ramas**, con 48 pruebas. El umbral del Quality Gate
 vive parametrizado en `jacoco.cobertura.minima` (0.80) y aplica a líneas **y a ramas**.
-JaCoCo cuenta **doce ramas** en `PlanillaService`: las dos salidas de cada punto de decisión —la
-comparación del bucle de escalones, las dos validaciones de entrada, el indicador de tope de AFP y
-el de exención de RC-IVA—, no una por escalón. Recorrer seis escalones no crea seis ramas, crea un
-`if` evaluado seis veces.
+JaCoCo cuenta **veinte ramas** en `PlanillaService`: las dos salidas de cada punto de decisión —la
+comparación del bucle de escalones, las dos validaciones de entrada, el indicador de tope de AFP,
+el de exención de RC-IVA y los cuatro del aguinaldo—, no una por escalón. Recorrer seis escalones
+no crea seis ramas, crea un `if` evaluado seis veces.
 
 El ejemplo que justifica medir ramas está en el tope de AFP. La expresión `ganado > topeAfp()` se
 ejecuta en **toda** liquidación, así que su línea aparece cubierta siempre; pero si ningún caso de

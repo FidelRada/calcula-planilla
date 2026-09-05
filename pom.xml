@@ -12,7 +12,7 @@
 
 	<groupId>bo.diplomado</groupId>
 	<artifactId>calcula-api</artifactId>
-	<version>1.2.0</version>
+	<version>1.3.0</version>
 	<name>calcula-api</name>
 	<description>API de liquidacion de planilla - Proyecto Final Modulo 4 CI/CD</description>
 

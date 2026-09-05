@@ -1,5 +1,6 @@
 package bo.diplomado.calcula.service;
 
+import bo.diplomado.calcula.model.Aguinaldo;
 import bo.diplomado.calcula.model.Liquidacion;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -32,18 +33,21 @@ public class PlanillaService {
     private final double topeAfpMinimos;
     private final double tasaRcIva;
     private final double minimosExentos;
+    private final int    mesesMinimosAguinaldo;
 
     public PlanillaService(
             @Value("${planilla.salario-minimo}")   double salarioMinimo,
             @Value("${planilla.tasa-afp}")         double tasaAfp,
             @Value("${planilla.tope-afp-minimos}") double topeAfpMinimos,
             @Value("${planilla.tasa-rc-iva}")      double tasaRcIva,
-            @Value("${planilla.minimos-exentos}")  double minimosExentos) {
+            @Value("${planilla.minimos-exentos}")  double minimosExentos,
+            @Value("${planilla.meses-minimos-aguinaldo}") int mesesMinimosAguinaldo) {
         this.salarioMinimo  = salarioMinimo;
         this.tasaAfp        = tasaAfp;
         this.topeAfpMinimos = topeAfpMinimos;
         this.tasaRcIva      = tasaRcIva;
         this.minimosExentos = minimosExentos;
+        this.mesesMinimosAguinaldo = mesesMinimosAguinaldo;
     }
 
     /**
@@ -83,11 +87,40 @@ public class PlanillaService {
                 "tasaAfp",        tasaAfp,
                 "topeAfpMinimos", topeAfpMinimos,
                 "tasaRcIva",      tasaRcIva,
-                "minimosExentos", minimosExentos);
+                "minimosExentos", minimosExentos,
+                "mesesMinimosAguinaldo", (double) mesesMinimosAguinaldo);
     }
 
     private double topeAfp() {
         return salarioMinimo * topeAfpMinimos;
+    }
+
+    /**
+     * Aguinaldo devengado segun los meses trabajados en el ano.
+     *
+     * Por debajo del minimo de meses no se devenga nada; al ano cumplido
+     * se devenga un total ganado completo; en medio, la parte proporcional.
+     *
+     * Reutiliza liquidar() a proposito: asi el aguinaldo se calcula sobre
+     * el mismo total ganado que ya validan las pruebas de liquidacion, y
+     * las validaciones de salario y antiguedad no se duplican.
+     *
+     * @throws IllegalArgumentException si los meses caen fuera de 0..12.
+     */
+    public Aguinaldo aguinaldo(double salarioBruto, int anios, int meses) {
+        if (meses < 0 || meses > 12) {
+            throw new IllegalArgumentException(
+                    "Los meses trabajados deben estar entre 0 y 12");
+        }
+
+        double ganado = liquidar(salarioBruto, anios).totalGanado();
+
+        if (meses < mesesMinimosAguinaldo) {
+            return new Aguinaldo(ganado, meses, false, 0.0);
+        }
+
+        double monto = (meses >= 12) ? ganado : ganado * meses / 12.0;
+        return new Aguinaldo(ganado, meses, true, monto);
     }
 
     /**
